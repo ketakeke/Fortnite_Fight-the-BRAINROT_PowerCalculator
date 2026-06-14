@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fortnite Brainrot Fight 戦闘力計算機</title>
+  <meta name="description" content="Brainrot Fight のブレインロット戦闘力を、凸倍率・属性倍率・変異倍率から計算/逆算できるツールです。">
+  <style>
+    :root{color-scheme:dark;--bg:#0b1020;--card:#141b3b;--line:rgba(255,255,255,.15);--text:#f8fafc;--muted:#b8c3d9;--primary:#8b5cf6;--accent:#38bdf8;--good:#34d399;--warn:#fbbf24;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Hiragino Sans","Yu Gothic",Meiryo,sans-serif}*{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--text);background:radial-gradient(circle at 10% 0%,rgba(56,189,248,.25),transparent 30rem),radial-gradient(circle at 90% 0%,rgba(139,92,246,.3),transparent 32rem),var(--bg)}.wrap{width:min(1080px,calc(100% - 28px));margin:auto;padding:32px 0 52px}h1{font-size:clamp(2rem,5vw,4rem);line-height:1.05;margin:12px 0;letter-spacing:-.05em}.lead{color:var(--muted);line-height:1.8;max-width:760px}.grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(320px,.95fr);gap:18px;align-items:start}.card{border:1px solid var(--line);background:rgba(20,27,59,.9);border-radius:22px;box-shadow:0 22px 70px rgba(0,0,0,.32);backdrop-filter:blur(14px)}.panel{padding:24px}.mode{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.mode button,.quick button{border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);border-radius:12px;padding:12px;font:inherit;cursor:pointer}.mode button[aria-pressed=true]{border-color:#a78bfa;background:linear-gradient(135deg,rgba(124,58,237,.45),rgba(14,165,233,.22))}.form{display:grid;grid-template-columns:1fr 1fr;gap:14px}.full{grid-column:1/-1}label{display:grid;gap:8px;color:var(--muted);font-size:.92rem}input,select{width:100%;border:1px solid var(--line);background:rgba(2,6,23,.55);color:var(--text);border-radius:12px;padding:12px;font:inherit}.check{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:12px;background:rgba(255,255,255,.045);color:var(--text)}input[type=checkbox]{width:18px;height:18px;accent-color:var(--primary)}.panel2{display:none}body[data-mode=forward] [data-panel=forward],body[data-mode=reverse] [data-panel=reverse]{display:block}.sub{margin:22px 0 12px;font-weight:800;color:#dbeafe}.quick{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}.result{position:sticky;top:18px;overflow:hidden}.resultTop{padding:26px;background:linear-gradient(135deg,rgba(124,58,237,.32),rgba(14,165,233,.12));border-bottom:1px solid var(--line)}.label{color:var(--muted);margin-bottom:8px}.power{font-size:clamp(2.7rem,7vw,5rem);font-weight:900;line-height:1;letter-spacing:-.06em}.badge{display:inline-flex;margin-top:15px;border:1px solid rgba(52,211,153,.3);background:rgba(16,185,129,.13);color:#dcfce7;border-radius:999px;padding:8px 11px}.badge.warn{border-color:rgba(251,191,36,.32);background:rgba(251,191,36,.12);color:#fef3c7}.body{padding:22px;display:grid;gap:14px}.metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px}.metric{border:1px solid var(--line);background:rgba(255,255,255,.045);border-radius:16px;padding:14px}.metric dt{color:var(--muted);font-size:.84rem}.metric dd{margin:7px 0 0;font-size:1.35rem;font-weight:800}.formula{border:1px solid rgba(56,189,248,.24);background:rgba(8,47,73,.24);border-radius:16px;padding:14px;color:#e0f2fe;line-height:1.7;overflow-wrap:anywhere}.note{color:var(--muted);line-height:1.7}table{width:100%;border-collapse:collapse;font-size:.92rem}th,td{border-bottom:1px solid rgba(255,255,255,.1);padding:10px;text-align:left;white-space:nowrap}th{color:#dbeafe;background:rgba(255,255,255,.06)}.table{overflow:auto;border:1px solid var(--line);border-radius:16px}@media(max-width:860px){.grid{grid-template-columns:1fr}.result{position:static}}@media(max-width:560px){.form,.metrics,.mode{grid-template-columns:1fr}.wrap{width:min(100% - 20px,1080px);padding-top:20px}}
+  </style>
+</head>
+<body data-mode="forward">
+  <div class="wrap">
+    <header>
+      <div>Fortnite Brainrot Fight / Power Calculator</div>
+      <h1>ブレインロット戦闘力計算機</h1>
+      <p class="lead">ベース戦闘力・凸倍率・属性倍率・変異倍率から戦闘力を計算します。出現した個体の戦闘力から、ノーマル時の推定ベースや★5 Pirate時の戦闘力も逆算できます。</p>
+    </header>
+
+    <main class="grid">
+      <section class="card panel">
+        <h2>入力</h2>
+        <div class="mode">
+          <button type="button" data-mode-button="forward" aria-pressed="true">ベースから計算</button>
+          <button type="button" data-mode-button="reverse" aria-pressed="false">出現値から逆算</button>
+        </div>
+
+        <div class="panel2" data-panel="forward">
+          <div class="form">
+            <label class="full">ベース戦闘力<input id="basePower" type="number" min="1" step="1" value="777"></label>
+            <label>凸<select id="targetAscension"></select></label>
+            <label>属性<select id="targetAttribute"></select></label>
+            <label class="full"><span class="check"><input id="targetMutation" type="checkbox">戦闘力倍率 +0.1 の変異あり</span></label>
+          </div>
+          <div class="quick">
+            <button type="button" data-preset="target-pirate">★5 Pirateにする</button>
+            <button type="button" data-preset="target-normal">ノーマルに戻す</button>
+            <button type="button" data-preset="target-mutation">変異ありにする</button>
+          </div>
+        </div>
+
+        <div class="panel2" data-panel="reverse">
+          <p class="note">Diamondなどで出た戦闘力を入力し、現在の凸・属性を選ぶと、ノーマル時のベース候補と変換先の戦闘力を推定します。</p>
+          <div class="sub">現在出ている個体</div>
+          <div class="form">
+            <label class="full">現在の戦闘力<input id="observedPower" type="number" min="1" step="1" value="2331"></label>
+            <label>現在の凸<select id="currentAscension"></select></label>
+            <label>現在の属性<select id="currentAttribute"></select></label>
+            <label class="full"><span class="check"><input id="currentMutation" type="checkbox">現在の個体に戦闘力倍率 +0.1 の変異あり</span></label>
+          </div>
+          <div class="sub">調べたい変換先</div>
+          <div class="form">
+            <label>変換先の凸<select id="reverseTargetAscension"></select></label>
+            <label>変換先の属性<select id="reverseTargetAttribute"></select></label>
+            <label class="full"><span class="check"><input id="reverseTargetMutation" type="checkbox">変換先に戦闘力倍率 +0.1 の変異あり</span></label>
+          </div>
+          <div class="quick">
+            <button type="button" data-preset="reverse-target-pirate">変換先を★5 Pirate</button>
+            <button type="button" data-preset="reverse-target-normal">変換先をノーマル</button>
+            <button type="button" data-preset="current-diamond">現在をDiamondにする</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="card result" aria-live="polite">
+        <div class="resultTop">
+          <div class="label" id="resultLabel">計算後の戦闘力</div>
+          <div class="power" id="mainPower">2,720</div>
+          <div class="badge" id="statusBadge">✅ 入力値から計算済み</div>
+        </div>
+        <div class="body">
+          <dl class="metrics">
+            <div class="metric"><dt>使用ベース戦闘力</dt><dd id="baseMetric">777</dd></div>
+            <div class="metric"><dt>合計倍率</dt><dd id="multiplierMetric">3.5</dd></div>
+          </dl>
+          <div class="formula" id="formulaText"></div>
+          <p class="note" id="reverseNote"></p>
+          <div class="table"><table><thead><tr><th>種類</th><th>倍率</th><th>内訳</th></tr></thead><tbody id="summaryRows"></tbody></table></div>
+          <p class="note">計算式：<strong>ceil(ベース戦闘力 × (凸倍率 + 属性倍率 - 1 + 変異0.1))</strong>。属性倍率と凸倍率が両方ある場合は、属性分と凸上昇分をベース戦闘力に対して足し合わせます。</p>
+        </div>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    const ASC=[['none','無凸',1],['star1','★1',1.1],['star2','★2',1.25],['star3','★3',1.5],['star4','★4',2],['star5','★5',2.8]].map(([key,label,value])=>({key,label,value}));
+    const ATTR=[['none','なし',1],['gold','Gold',1.1],['diamond','Diamond',1.2],['rainbow','Rainbow',1.4],['angel','Angel',1.5],['devil','Devil',1.5],['royal','Royal',1.6],['yokai','Yokai',1.7],['pirate','Pirate',1.7]].map(([key,label,value])=>({key,label,value}));
+    const EPS=1e-9;
+    const $=id=>document.getElementById(id);
+    const el={basePower:$('basePower'),targetAscension:$('targetAscension'),targetAttribute:$('targetAttribute'),targetMutation:$('targetMutation'),observedPower:$('observedPower'),currentAscension:$('currentAscension'),currentAttribute:$('currentAttribute'),currentMutation:$('currentMutation'),reverseTargetAscension:$('reverseTargetAscension'),reverseTargetAttribute:$('reverseTargetAttribute'),reverseTargetMutation:$('reverseTargetMutation')};
+    const fmt=(v,d=4)=>new Intl.NumberFormat('ja-JP',{maximumFractionDigits:d}).format(Number(v));
+    const pow=v=>Number.isFinite(v)?new Intl.NumberFormat('ja-JP',{maximumFractionDigits:0}).format(v):'-';
+    const read=i=>{const v=Number(i.value);return Number.isFinite(v)&&v>0?v:NaN};
+    const opt=(list,key)=>list.find(x=>x.key===key)||list[0];
+    const mult=(a,b,m)=>a.value+b.value-1+(m?.1:0);
+    const calc=(base,m)=>Math.ceil(base*m-EPS);
+    function fill(select,list,key){select.innerHTML=list.map(x=>`<option value="${x.key}">${x.label}（${fmt(x.value)}）</option>`).join('');select.value=key}
+    function rows(data){$('summaryRows').innerHTML=data.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}
+    function error(msg){$('mainPower').textContent='-';$('resultLabel').textContent='計算できません';$('statusBadge').className='badge warn';$('statusBadge').textContent='⚠️ 入力値を確認してください';$('baseMetric').textContent='-';$('multiplierMetric').textContent='-';$('formulaText').textContent=msg;$('reverseNote').textContent='';rows([])}
+    function formula(base,a,b,m){const mut=m?` + ${fmt(base)} × 0.1`:'';const raw=base*mult(a,b,m);return `ceil(${fmt(base)} × ${fmt(b.value)} + ${fmt(base)} × (${fmt(a.value)} - 1)${mut})<br>= ceil(${fmt(raw,6)})`}
+    function candidates(observed,m){const low=(observed-1)/m, high=observed/m, start=Math.floor(low+EPS)+1, end=Math.floor(high+EPS), list=[];for(let v=start;v<=end;v++)list.push(v);return{low,high,list}}
+    function updateForward(){const base=read(el.basePower);if(!Number.isFinite(base))return error('ベース戦闘力に1以上の数値を入力してください。');const a=opt(ASC,el.targetAscension.value),b=opt(ATTR,el.targetAttribute.value),mu=el.targetMutation.checked,m=mult(a,b,mu),p=calc(base,m);$('resultLabel').textContent='計算後の戦闘力';$('mainPower').textContent=pow(p);$('statusBadge').className='badge';$('statusBadge').textContent='✅ 入力値から計算済み';$('baseMetric').textContent=fmt(base);$('multiplierMetric').textContent=fmt(m);$('formulaText').innerHTML=formula(base,a,b,mu);$('reverseNote').textContent='';rows([['凸',fmt(a.value),a.label],['属性',fmt(b.value),b.label],['変異',mu?'+0.1':'+0',mu?'あり':'なし'],['合計倍率',fmt(m),`${fmt(a.value)} + ${fmt(b.value)} - 1${mu?' + 0.1':''}`]])}
+    function updateReverse(){const observed=read(el.observedPower);if(!Number.isFinite(observed))return error('現在の戦闘力に1以上の数値を入力してください。');const ca=opt(ASC,el.currentAscension.value),cb=opt(ATTR,el.currentAttribute.value),cmu=el.currentMutation.checked,cm=mult(ca,cb,cmu);const ta=opt(ASC,el.reverseTargetAscension.value),tb=opt(ATTR,el.reverseTargetAttribute.value),tmu=el.reverseTargetMutation.checked,tm=mult(ta,tb,tmu);const r=candidates(observed,cm),estimated=observed/cm,bases=r.list.length?r.list:[Math.round(estimated)],powers=bases.map(b=>calc(b,tm)),min=Math.min(...powers),max=Math.max(...powers),cand=r.list.length?r.list.join(' / '):`約${fmt(estimated,2)}`;$('resultLabel').textContent=r.list.length===1?'推定変換後の戦闘力':'推定変換後の戦闘力範囲';$('mainPower').textContent=min===max?pow(min):`${pow(min)}〜${pow(max)}`;$('statusBadge').className=r.list.length?'badge':'badge warn';$('statusBadge').textContent=r.list.length?'✅ 出現値から逆算済み':'⚠️ 整数候補が見つかりません';$('baseMetric').textContent=cand;$('multiplierMetric').textContent=fmt(tm);$('formulaText').innerHTML=[`現在倍率：${fmt(ca.value)} + ${fmt(cb.value)} - 1${cmu?' + 0.1':''} = ${fmt(cm)}`,`ベース候補：${fmt(r.low,3)} より大きく、${fmt(r.high,3)} 以下 → ${cand}`,`変換先：ceil(ベース × ${fmt(tm)})`].join('<br>');$('reverseNote').textContent='出現値は切り上げ後の値なので、逆算ではベース戦闘力の整数候補を範囲で確認しています。';rows([['現在の凸',fmt(ca.value),ca.label],['現在の属性',fmt(cb.value),cb.label],['現在の変異',cmu?'+0.1':'+0',cmu?'あり':'なし'],['現在倍率',fmt(cm),`観測値 ${fmt(observed)} を逆算`],['変換先の凸',fmt(ta.value),ta.label],['変換先の属性',fmt(tb.value),tb.label],['変換先の変異',tmu?'+0.1':'+0',tmu?'あり':'なし'],['変換先倍率',fmt(tm),`${fmt(ta.value)} + ${fmt(tb.value)} - 1${tmu?' + 0.1':''}`]])}
+    function update(){document.body.dataset.mode==='reverse'?updateReverse():updateForward()}
+    function setMode(mode){document.body.dataset.mode=mode;document.querySelectorAll('[data-mode-button]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.modeButton===mode)));update()}
+    function setSel(select,key){select.value=key;select.dispatchEvent(new Event('change',{bubbles:true}))}
+    function preset(p){if(p==='target-pirate'){setSel(el.targetAscension,'star5');setSel(el.targetAttribute,'pirate');el.targetMutation.checked=false}if(p==='target-normal'){setSel(el.targetAscension,'none');setSel(el.targetAttribute,'none');el.targetMutation.checked=false}if(p==='target-mutation')el.targetMutation.checked=true;if(p==='reverse-target-pirate'){setSel(el.reverseTargetAscension,'star5');setSel(el.reverseTargetAttribute,'pirate');el.reverseTargetMutation.checked=false}if(p==='reverse-target-normal'){setSel(el.reverseTargetAscension,'none');setSel(el.reverseTargetAttribute,'none');el.reverseTargetMutation.checked=false}if(p==='current-diamond'){setSel(el.currentAscension,'none');setSel(el.currentAttribute,'diamond');el.currentMutation.checked=false}update()}
+    fill(el.targetAscension,ASC,'star5');fill(el.targetAttribute,ATTR,'pirate');fill(el.currentAscension,ASC,'star5');fill(el.currentAttribute,ATTR,'diamond');fill(el.reverseTargetAscension,ASC,'star5');fill(el.reverseTargetAttribute,ATTR,'pirate');
+    document.querySelectorAll('[data-mode-button]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.modeButton)));
+    document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>preset(b.dataset.preset)));
+    Object.values(el).forEach(x=>{x.addEventListener('input',update);x.addEventListener('change',update)});
+    update();
+  </script>
+</body>
+</html>
