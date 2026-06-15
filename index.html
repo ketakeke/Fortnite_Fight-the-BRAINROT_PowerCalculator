@@ -12,7 +12,7 @@
 <body data-mode="forward">
   <div class="wrap">
     <header>
-      <div>Fortnite Fight the BRAINROT / Power Calculator</div>
+      <div>Fortnite Fight the BRAINROT / Power Calculator</dhiv>
       <h1>ブレインロット戦闘力計算機</h1>
       <p class="lead">ベース戦闘力・凸倍率・属性倍率・変異倍率から戦闘力を計算します。出現した個体の戦闘力から、ノーマル時の推定ベースや★5 Pirate時の戦闘力も逆算できます。</p>
     </header>
@@ -43,7 +43,7 @@
           <p class="note">Diamondなどで出た戦闘力を入力し、現在の凸・属性を選ぶと、ノーマル時のベース候補と変換先の戦闘力を推定します。</p>
           <div class="sub">現在出ている個体</div>
           <div class="form">
-            <label class="full">現在の戦闘力<input id="observedPower" type="number" min="1" step="1" value="2331"></label>
+            <label class="full">現在の戦闘力<input id="observedPower" type="number" min="1" step="1" value="1320"></label>
             <label>現在の凸<select id="currentAscension"></select></label>
             <label>現在の属性<select id="currentAttribute"></select></label>
             <label class="full"><span class="check"><input id="currentMutation" type="checkbox">現在の個体に戦闘力倍率 +0.1 の変異あり</span></label>
@@ -105,7 +105,7 @@
     function setMode(mode){document.body.dataset.mode=mode;document.querySelectorAll('[data-mode-button]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.modeButton===mode)));update()}
     function setSel(select,key){select.value=key;select.dispatchEvent(new Event('change',{bubbles:true}))}
     function preset(p){if(p==='target-pirate'){setSel(el.targetAscension,'star5');setSel(el.targetAttribute,'pirate');el.targetMutation.checked=false}if(p==='target-normal'){setSel(el.targetAscension,'none');setSel(el.targetAttribute,'none');el.targetMutation.checked=false}if(p==='target-mutation')el.targetMutation.checked=true;if(p==='reverse-target-pirate'){setSel(el.reverseTargetAscension,'star5');setSel(el.reverseTargetAttribute,'pirate');el.reverseTargetMutation.checked=false}if(p==='reverse-target-normal'){setSel(el.reverseTargetAscension,'none');setSel(el.reverseTargetAttribute,'none');el.reverseTargetMutation.checked=false}if(p==='current-diamond'){setSel(el.currentAscension,'none');setSel(el.currentAttribute,'diamond');el.currentMutation.checked=false}update()}
-    fill(el.targetAscension,ASC,'star5');fill(el.targetAttribute,ATTR,'pirate');fill(el.currentAscension,ASC,'star5');fill(el.currentAttribute,ATTR,'diamond');fill(el.reverseTargetAscension,ASC,'star5');fill(el.reverseTargetAttribute,ATTR,'pirate');
+    fill(el.targetAscension,ASC,'star5');fill(el.targetAttribute,ATTR,'pirate');fill(el.currentAscension,ASC,'none');fill(el.currentAttribute,ATTR,'diamond');fill(el.reverseTargetAscension,ASC,'star5');fill(el.reverseTargetAttribute,ATTR,'pirate');
     document.querySelectorAll('[data-mode-button]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.modeButton)));
     document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>preset(b.dataset.preset)));
     Object.values(el).forEach(x=>{x.addEventListener('input',update);x.addEventListener('change',update)});
