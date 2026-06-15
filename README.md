@@ -1,6 +1,6 @@
-# Fortnite Brainrot Fight Power Calculator
+# Fortnite Fight the BRAINROT Power Calculator
 
-Brainrot Fight のブレインロット戦闘力を計算・逆算するための静的Webアプリです。
+Fight the BRAINROT（ブレインロットファイト）のブレインロット戦闘力を計算・逆算するための静的Webアプリです。
 
 ## 計算式
 
