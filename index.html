@@ -54,9 +54,9 @@
             <label class="full"><span class="check"><input id="reverseTargetMutation" type="checkbox">変換先に戦闘力倍率 +0.1 の変異あり</span></label>
           </div>
           <div class="quick">
-            <button type="button" data-preset="reverse-target-pirate">変換先を★5 Pirate</button>
+            <button type="button" data-preset="reverse-target-neon">変換先を★5 Neon</button>
             <button type="button" data-preset="reverse-target-normal">変換先をノーマル</button>
-            <button type="button" data-preset="current-diamond">現在をDiamondにする</button>
+            <button type="button" data-preset="current-yokai">現在をYokaiにする</button>
           </div>
         </div>
       </section>
@@ -103,7 +103,7 @@
     function update(){document.body.dataset.mode==='reverse'?updateReverse():updateForward()}
     function setMode(mode){document.body.dataset.mode=mode;document.querySelectorAll('[data-mode-button]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.modeButton===mode)));update()}
     function setSel(select,key){select.value=key;select.dispatchEvent(new Event('change',{bubbles:true}))}
-    function preset(p){if(p==='target-neon'){setSel(el.targetAscension,'star5');setSel(el.targetAttribute,'neon');el.targetMutation.checked=false}if(p==='target-normal'){setSel(el.targetAscension,'none');setSel(el.targetAttribute,'none');el.targetMutation.checked=false}if(p==='reverse-target-pirate'){setSel(el.reverseTargetAscension,'star5');setSel(el.reverseTargetAttribute,'pirate');el.reverseTargetMutation.checked=false}if(p==='reverse-target-normal'){setSel(el.reverseTargetAscension,'none');setSel(el.reverseTargetAttribute,'none');el.reverseTargetMutation.checked=false}if(p==='current-diamond'){setSel(el.currentAscension,'none');setSel(el.currentAttribute,'diamond');el.currentMutation.checked=false}update()}
+    function preset(p){if(p==='target-neon'){setSel(el.targetAscension,'star5');setSel(el.targetAttribute,'neon');el.targetMutation.checked=false}if(p==='target-normal'){setSel(el.targetAscension,'none');setSel(el.targetAttribute,'none');el.targetMutation.checked=false}if(p==='reverse-target-neon'){setSel(el.reverseTargetAscension,'star5');setSel(el.reverseTargetAttribute,'neon');el.reverseTargetMutation.checked=false}if(p==='reverse-target-normal'){setSel(el.reverseTargetAscension,'none');setSel(el.reverseTargetAttribute,'none');el.reverseTargetMutation.checked=false}if(p==='current-yokai'){setSel(el.currentAscension,'none');setSel(el.currentAttribute,'yokai');el.currentMutation.checked=false}update()}
     fill(el.targetAscension,ASC,'star5');fill(el.targetAttribute,ATTR,'pirate');fill(el.currentAscension,ASC,'none');fill(el.currentAttribute,ATTR,'diamond');fill(el.reverseTargetAscension,ASC,'star5');fill(el.reverseTargetAttribute,ATTR,'pirate');
     document.querySelectorAll('[data-mode-button]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.modeButton)));
     document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>preset(b.dataset.preset)));
