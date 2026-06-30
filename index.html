@@ -30,7 +30,8 @@
             <label class="full">ベース戦闘力<input id="basePower" type="number" min="1" step="1" value="777"></label>
             <label>凸（倍率）<select id="targetAscension"></select></label>
             <label>属性（倍率）<select id="targetAttribute"></select></label>
-            <label class="full"><span class="check"><input id="targetMutation" type="checkbox">戦闘力倍率 +0.1 の変異あり</span></label>
+            <label>戦闘力倍率 +0.1 の変異<select id="targetMutation01"></select></label>
+            <label>戦闘力倍率 +0.2 の変異<select id="targetMutation02"></select></label>
           </div>
           <div class="quick">
             <button type="button" data-preset="target-neon">★5 Neonにする</button>
@@ -45,13 +46,15 @@
             <label class="full">現在の戦闘力<input id="observedPower" type="number" min="1" step="1" value="1320"></label>
             <label>現在の凸<select id="currentAscension"></select></label>
             <label>現在の属性<select id="currentAttribute"></select></label>
-            <label class="full"><span class="check"><input id="currentMutation" type="checkbox">現在の個体に戦闘力倍率 +0.1 の変異あり</span></label>
+            <label>現在の +0.1 変異<select id="currentMutation01"></select></label>
+            <label>現在の +0.2 変異<select id="currentMutation02"></select></label>
           </div>
           <div class="sub">調べたい変換先</div>
           <div class="form">
             <label>変換先の凸<select id="reverseTargetAscension"></select></label>
             <label>変換先の属性<select id="reverseTargetAttribute"></select></label>
-            <label class="full"><span class="check"><input id="reverseTargetMutation" type="checkbox">変換先に戦闘力倍率 +0.1 の変異あり</span></label>
+            <label>変換先の +0.1 変異<select id="reverseTargetMutation01"></select></label>
+            <label>変換先の +0.2 変異<select id="reverseTargetMutation02"></select></label>
           </div>
           <div class="quick">
             <button type="button" data-preset="reverse-target-neon">変換先を★5 Neon</button>
@@ -75,7 +78,7 @@
           <div class="formula" id="formulaText"></div>
           <p class="note" id="reverseNote"></p>
           <div class="table"><table><thead><tr><th>種類</th><th>倍率</th><th>内訳</th></tr></thead><tbody id="summaryRows"></tbody></table></div>
-          <p class="note">計算式：<strong>ceil(ベース戦闘力 × (凸倍率 + 属性倍率 - 1 + 変異0.1))</strong>。属性倍率と凸倍率が両方ある場合は、属性分と凸上昇分をベース戦闘力に対して足し合わせます。</p>
+          <p class="note">計算式：<strong>ceil(ベース戦闘力 × (凸倍率 + 属性倍率 - 1 + 変異ボーナス))</strong>。属性倍率と凸倍率が両方ある場合は、属性分と凸上昇分をベース戦闘力に対して足し合わせます。</p>
         </div>
       </aside>
     </main>
@@ -84,27 +87,32 @@
   <script>
     const ASC=[['none','無凸',1],['star1','★1',1.1],['star2','★2',1.25],['star3','★3',1.5],['star4','★4',2],['star5','★5',2.8]].map(([key,label,value])=>({key,label,value}));
     const ATTR=[['none','なし',1],['gold','Gold',1.1],['diamond','Diamond',1.2],['rainbow','Rainbow',1.4],['angel','Angel',1.5],['devil','Devil',1.5],['royal','Royal',1.6],['pirate','Pirate',1.7],['yokai','Yokai',1.8],['neon','Neon',1.8]].map(([key,label,value])=>({key,label,value}));
+    const MUT01=[0,1,2].map(value=>({key:String(value),label:`${value}種類`,value}));
+    const MUT02=[0,1].map(value=>({key:String(value),label:value?'あり':'なし',value}));
     const EPS=1e-9;
     const $=id=>document.getElementById(id);
-    const el={basePower:$('basePower'),targetAscension:$('targetAscension'),targetAttribute:$('targetAttribute'),targetMutation:$('targetMutation'),observedPower:$('observedPower'),currentAscension:$('currentAscension'),currentAttribute:$('currentAttribute'),currentMutation:$('currentMutation'),reverseTargetAscension:$('reverseTargetAscension'),reverseTargetAttribute:$('reverseTargetAttribute'),reverseTargetMutation:$('reverseTargetMutation')};
+    const el={basePower:$('basePower'),targetAscension:$('targetAscension'),targetAttribute:$('targetAttribute'),targetMutation01:$('targetMutation01'),targetMutation02:$('targetMutation02'),observedPower:$('observedPower'),currentAscension:$('currentAscension'),currentAttribute:$('currentAttribute'),currentMutation01:$('currentMutation01'),currentMutation02:$('currentMutation02'),reverseTargetAscension:$('reverseTargetAscension'),reverseTargetAttribute:$('reverseTargetAttribute'),reverseTargetMutation01:$('reverseTargetMutation01'),reverseTargetMutation02:$('reverseTargetMutation02')};
     const fmt=(v,d=4)=>new Intl.NumberFormat('ja-JP',{maximumFractionDigits:d}).format(Number(v));
     const pow=v=>Number.isFinite(v)?new Intl.NumberFormat('ja-JP',{maximumFractionDigits:0}).format(v):'-';
     const read=i=>{const v=Number(i.value);return Number.isFinite(v)&&v>0?v:NaN};
     const opt=(list,key)=>list.find(x=>x.key===key)||list[0];
-    const mult=(a,b,m)=>a.value+b.value-1+(m?.1:0);
+    const mutationBonus=(m01,m02)=>m01.value*0.1+m02.value*0.2;
+    const mutationLabel=(m01,m02)=>`+${fmt(mutationBonus(m01,m02),1)}`;
+    const mutationDetail=(m01,m02)=>`+0.1 × ${m01.value}種類 + +0.2 × ${m02.value}種類`;
+    const mult=(a,b,m01,m02)=>a.value+b.value-1+mutationBonus(m01,m02);
     const calc=(base,m)=>Math.ceil(base*m-EPS);
     function fill(select,list,key){select.innerHTML=list.map(x=>`<option value="${x.key}">${x.label}（${fmt(x.value)}）</option>`).join('');select.value=key}
     function rows(data){$('summaryRows').innerHTML=data.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}
     function error(msg){$('mainPower').textContent='-';$('resultLabel').textContent='計算できません';$('statusBadge').className='badge warn';$('statusBadge').textContent='⚠️ 入力値を確認してください';$('baseMetric').textContent='-';$('multiplierMetric').textContent='-';$('formulaText').textContent=msg;$('reverseNote').textContent='';rows([])}
-    function formula(base,a,b,m){const mut=m?` + ${fmt(base)} × 0.1`:'';const raw=base*mult(a,b,m);return `ceil(${fmt(base)} × ${fmt(b.value)} + ${fmt(base)} × (${fmt(a.value)} - 1)${mut})<br>= ceil(${fmt(raw,6)})`}
+    function formula(base,a,b,m01,m02){const bonus=mutationBonus(m01,m02),mut=bonus?` + ${fmt(base)} × ${fmt(bonus,1)}`:'';const raw=base*mult(a,b,m01,m02);return `ceil(${fmt(base)} × ${fmt(b.value)} + ${fmt(base)} × (${fmt(a.value)} - 1)${mut})<br>= ceil(${fmt(raw,6)})`}
     function candidates(observed,m){const low=(observed-1)/m, high=observed/m, start=Math.floor(low+EPS)+1, end=Math.floor(high+EPS), list=[];for(let v=start;v<=end;v++)list.push(v);return{low,high,list}}
-    function updateForward(){const base=read(el.basePower);if(!Number.isFinite(base))return error('ベース戦闘力に1以上の数値を入力してください。');const a=opt(ASC,el.targetAscension.value),b=opt(ATTR,el.targetAttribute.value),mu=el.targetMutation.checked,m=mult(a,b,mu),p=calc(base,m);$('resultLabel').textContent='計算後の戦闘力';$('mainPower').textContent=pow(p);$('statusBadge').className='badge';$('statusBadge').textContent='✅ 入力値から計算済み';$('baseMetric').textContent=fmt(base);$('multiplierMetric').textContent=fmt(m);$('formulaText').innerHTML=formula(base,a,b,mu);$('reverseNote').textContent='';rows([['凸',fmt(a.value),a.label],['属性',fmt(b.value),b.label],['変異',mu?'+0.1':'+0',mu?'あり':'なし'],['合計倍率',fmt(m),`${fmt(a.value)} + ${fmt(b.value)} - 1${mu?' + 0.1':''}`]])}
-    function updateReverse(){const observed=read(el.observedPower);if(!Number.isFinite(observed))return error('現在の戦闘力に1以上の数値を入力してください。');const ca=opt(ASC,el.currentAscension.value),cb=opt(ATTR,el.currentAttribute.value),cmu=el.currentMutation.checked,cm=mult(ca,cb,cmu);const ta=opt(ASC,el.reverseTargetAscension.value),tb=opt(ATTR,el.reverseTargetAttribute.value),tmu=el.reverseTargetMutation.checked,tm=mult(ta,tb,tmu);const r=candidates(observed,cm),estimated=observed/cm,bases=r.list.length?r.list:[Math.round(estimated)],powers=bases.map(b=>calc(b,tm)),min=Math.min(...powers),max=Math.max(...powers),cand=r.list.length?r.list.join(' / '):`約${fmt(estimated,2)}`;$('resultLabel').textContent=r.list.length===1?'推定変換後の戦闘力':'推定変換後の戦闘力範囲';$('mainPower').textContent=min===max?pow(min):`${pow(min)}〜${pow(max)}`;$('statusBadge').className=r.list.length?'badge':'badge warn';$('statusBadge').textContent=r.list.length?'✅ 出現値から逆算済み':'⚠️ 整数候補が見つかりません';$('baseMetric').textContent=cand;$('multiplierMetric').textContent=fmt(tm);$('formulaText').innerHTML=[`現在倍率：${fmt(ca.value)} + ${fmt(cb.value)} - 1${cmu?' + 0.1':''} = ${fmt(cm)}`,`ベース候補：${fmt(r.low,3)} より大きく、${fmt(r.high,3)} 以下 → ${cand}`,`変換先：ceil(ベース × ${fmt(tm)})`].join('<br>');$('reverseNote').textContent='出現値は切り上げ後の値なので、逆算ではベース戦闘力の整数候補を範囲で確認しています。';rows([['現在の凸',fmt(ca.value),ca.label],['現在の属性',fmt(cb.value),cb.label],['現在の変異',cmu?'+0.1':'+0',cmu?'あり':'なし'],['現在倍率',fmt(cm),`観測値 ${fmt(observed)} を逆算`],['変換先の凸',fmt(ta.value),ta.label],['変換先の属性',fmt(tb.value),tb.label],['変換先の変異',tmu?'+0.1':'+0',tmu?'あり':'なし'],['変換先倍率',fmt(tm),`${fmt(ta.value)} + ${fmt(tb.value)} - 1${tmu?' + 0.1':''}`]])}
+    function updateForward(){const base=read(el.basePower);if(!Number.isFinite(base))return error('ベース戦闘力に1以上の数値を入力してください。');const a=opt(ASC,el.targetAscension.value),b=opt(ATTR,el.targetAttribute.value),mu01=opt(MUT01,el.targetMutation01.value),mu02=opt(MUT02,el.targetMutation02.value),m=mult(a,b,mu01,mu02),p=calc(base,m);$('resultLabel').textContent='計算後の戦闘力';$('mainPower').textContent=pow(p);$('statusBadge').className='badge';$('statusBadge').textContent='✅ 入力値から計算済み';$('baseMetric').textContent=fmt(base);$('multiplierMetric').textContent=fmt(m);$('formulaText').innerHTML=formula(base,a,b,mu01,mu02);$('reverseNote').textContent='';rows([['凸',fmt(a.value),a.label],['属性',fmt(b.value),b.label],['変異',mutationLabel(mu01,mu02),mutationDetail(mu01,mu02)],['合計倍率',fmt(m),`${fmt(a.value)} + ${fmt(b.value)} - 1 + ${fmt(mutationBonus(mu01,mu02),1)}`]])}
+    function updateReverse(){const observed=read(el.observedPower);if(!Number.isFinite(observed))return error('現在の戦闘力に1以上の数値を入力してください。');const ca=opt(ASC,el.currentAscension.value),cb=opt(ATTR,el.currentAttribute.value),cmu01=opt(MUT01,el.currentMutation01.value),cmu02=opt(MUT02,el.currentMutation02.value),cm=mult(ca,cb,cmu01,cmu02);const ta=opt(ASC,el.reverseTargetAscension.value),tb=opt(ATTR,el.reverseTargetAttribute.value),tmu01=opt(MUT01,el.reverseTargetMutation01.value),tmu02=opt(MUT02,el.reverseTargetMutation02.value),tm=mult(ta,tb,tmu01,tmu02);const r=candidates(observed,cm),estimated=observed/cm,bases=r.list.length?r.list:[Math.round(estimated)],powers=bases.map(b=>calc(b,tm)),min=Math.min(...powers),max=Math.max(...powers),cand=r.list.length?r.list.join(' / '):`約${fmt(estimated,2)}`;$('resultLabel').textContent=r.list.length===1?'推定変換後の戦闘力':'推定変換後の戦闘力範囲';$('mainPower').textContent=min===max?pow(min):`${pow(min)}〜${pow(max)}`;$('statusBadge').className=r.list.length?'badge':'badge warn';$('statusBadge').textContent=r.list.length?'✅ 出現値から逆算済み':'⚠️ 整数候補が見つかりません';$('baseMetric').textContent=cand;$('multiplierMetric').textContent=fmt(tm);$('formulaText').innerHTML=[`現在倍率：${fmt(ca.value)} + ${fmt(cb.value)} - 1 + ${fmt(mutationBonus(cmu01,cmu02),1)} = ${fmt(cm)}`,`ベース候補：${fmt(r.low,3)} より大きく、${fmt(r.high,3)} 以下 → ${cand}`,`変換先：ceil(ベース × ${fmt(tm)})`].join('<br>');$('reverseNote').textContent='出現値は切り上げ後の値なので、逆算ではベース戦闘力の整数候補を範囲で確認しています。';rows([['現在の凸',fmt(ca.value),ca.label],['現在の属性',fmt(cb.value),cb.label],['現在の変異',mutationLabel(cmu01,cmu02),mutationDetail(cmu01,cmu02)],['現在倍率',fmt(cm),`観測値 ${fmt(observed)} を逆算`],['変換先の凸',fmt(ta.value),ta.label],['変換先の属性',fmt(tb.value),tb.label],['変換先の変異',mutationLabel(tmu01,tmu02),mutationDetail(tmu01,tmu02)],['変換先倍率',fmt(tm),`${fmt(ta.value)} + ${fmt(tb.value)} - 1 + ${fmt(mutationBonus(tmu01,tmu02),1)}`]])}
     function update(){document.body.dataset.mode==='reverse'?updateReverse():updateForward()}
     function setMode(mode){document.body.dataset.mode=mode;document.querySelectorAll('[data-mode-button]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.modeButton===mode)));update()}
     function setSel(select,key){select.value=key;select.dispatchEvent(new Event('change',{bubbles:true}))}
-    function preset(p){if(p==='target-neon'){setSel(el.targetAscension,'star5');setSel(el.targetAttribute,'neon');el.targetMutation.checked=false}if(p==='target-normal'){setSel(el.targetAscension,'none');setSel(el.targetAttribute,'none');el.targetMutation.checked=false}if(p==='reverse-target-neon'){setSel(el.reverseTargetAscension,'star5');setSel(el.reverseTargetAttribute,'neon');el.reverseTargetMutation.checked=false}if(p==='reverse-target-normal'){setSel(el.reverseTargetAscension,'none');setSel(el.reverseTargetAttribute,'none');el.reverseTargetMutation.checked=false}if(p==='current-yokai'){setSel(el.currentAscension,'none');setSel(el.currentAttribute,'yokai');el.currentMutation.checked=false}update()}
-    fill(el.targetAscension,ASC,'star5');fill(el.targetAttribute,ATTR,'pirate');fill(el.currentAscension,ASC,'none');fill(el.currentAttribute,ATTR,'diamond');fill(el.reverseTargetAscension,ASC,'star5');fill(el.reverseTargetAttribute,ATTR,'pirate');
+    function preset(p){if(p==='target-neon'){setSel(el.targetAscension,'star5');setSel(el.targetAttribute,'neon');el.targetMutation01.value='0';el.targetMutation02.value='0'}if(p==='target-normal'){setSel(el.targetAscension,'none');setSel(el.targetAttribute,'none');el.targetMutation01.value='0';el.targetMutation02.value='0'}if(p==='reverse-target-neon'){setSel(el.reverseTargetAscension,'star5');setSel(el.reverseTargetAttribute,'neon');el.reverseTargetMutation01.value='0';el.reverseTargetMutation02.value='0'}if(p==='reverse-target-normal'){setSel(el.reverseTargetAscension,'none');setSel(el.reverseTargetAttribute,'none');el.reverseTargetMutation01.value='0';el.reverseTargetMutation02.value='0'}if(p==='current-yokai'){setSel(el.currentAscension,'none');setSel(el.currentAttribute,'yokai');el.currentMutation01.value='0';el.currentMutation02.value='0'}update()}
+    fill(el.targetAscension,ASC,'star5');fill(el.targetAttribute,ATTR,'pirate');fill(el.currentAscension,ASC,'none');fill(el.currentAttribute,ATTR,'diamond');fill(el.reverseTargetAscension,ASC,'star5');fill(el.reverseTargetAttribute,ATTR,'pirate');fill(el.targetMutation01,MUT01,'0');fill(el.targetMutation02,MUT02,'0');fill(el.currentMutation01,MUT01,'0');fill(el.currentMutation02,MUT02,'0');fill(el.reverseTargetMutation01,MUT01,'0');fill(el.reverseTargetMutation02,MUT02,'0');
     document.querySelectorAll('[data-mode-button]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.modeButton)));
     document.querySelectorAll('[data-preset]').forEach(b=>b.addEventListener('click',()=>preset(b.dataset.preset)));
     Object.values(el).forEach(x=>{x.addEventListener('input',update);x.addEventListener('change',update)});
